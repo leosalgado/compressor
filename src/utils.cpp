@@ -8,7 +8,7 @@ std::string read_file(const std::string &path) {
   std::ifstream in(path);
 
   if (!in) {
-    std::cerr << "Erro ao abrir o arquivo: " << path << std::endl;
+    std::cerr << "Error opening file: " << path << std::endl;
     return "";
   }
 
