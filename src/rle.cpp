@@ -1,5 +1,6 @@
 #include "rle.hpp"
 
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -26,4 +27,13 @@ std::vector<std::pair<char, int>> rle_compress(const std::string &input) {
   return output;
 }
 
-std::string rle_decompress(const std::vector<std::pair<char, int>> &input);
+std::string rle_decompress(const std::vector<std::pair<char, int>> &input) {
+
+  std::string output;
+
+  for (const auto &p : input) {
+    output.append(p.second, p.first);
+  }
+
+  return output;
+}
