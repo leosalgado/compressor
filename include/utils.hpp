@@ -1,12 +1,9 @@
 #pragma once
-#include <string>
+#include <cstdint>
+#include <filesystem>
 #include <vector>
 
-std::string read_file(const std::string &path);
+std::vector<uint8_t> read_bytes(const std::filesystem::path &path);
 
-void write_file(const std::string &path,
-                const std::vector<std::pair<char, int>> &data);
-
-std::vector<std::pair<char, int>> read_binary_file(const std::string &path);
-
-void save_text(const std::string &path, const std::string &data);
+void write_bytes(const std::filesystem::path &path,
+                 const std::vector<uint8_t> &data);

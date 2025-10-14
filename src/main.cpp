@@ -1,32 +1,51 @@
 #include "rle.hpp"
-#include "utils.hpp"
 
+#include <cstdint>
+#include <cstring>
 #include <exception>
+#include <filesystem>
+#include <fstream>
 #include <iostream>
-#include <stdexcept>
+#include <vector>
 
 int main(int argc, char *argv[]) {
-  const std::string INPUT_FILE = "../data/input.txt";
-  const std::string COMPRESSED_OUTPUT = "../data/compressed_output.leo";
-  const std::string DECOMPRESSED_OUTPUT = "../data/decompressed_output.txt";
+
+  std::vector<std::filesystem::path> inputFiles;
+
+  if (argc < 2) {
+    std::cerr << "Usage: " << argv[0]
+              << " compress|decompress <file1> <file2> ... <fileN>"
+              << std::endl;
+    return 1;
+  }
+
+  for (int i = 2; i < argc; ++i) {
+    if (!(std::filesystem::exists(argv[i]))) {
+      std::cerr << "\"" << argv[i] << "\"" << " file doesn't exist."
+                << std::endl;
+      return 1;
+    }
+    inputFiles.emplace_back(argv[i]);
+  }
+
+  std::ifstream ifs(inputFiles[0], std::ios::binary);
+  uint8_t firstByte;
+  ifs.read(reinterpret_cast<char *>(&firstByte), 1);
 
   try {
-
-    std::string file_content = read_file(INPUT_FILE);
-
-    if (file_content.empty()) {
-      throw std::runtime_error("Input file is empty: " + INPUT_FILE);
+    if (strcmp(argv[1], "compress") == 0) {
+      rle_compress(inputFiles);
+    } else if (strcmp(argv[1], "decompress") == 0) {
+      if (firstByte == 1) {
+        rle_decompress(inputFiles);
+      } else {
+        std::cerr << "File not recognized." << std::endl;
+      }
+    } else {
+      std::cerr << "Invalid: choose a mode between compresss|decompress."
+                << std::endl;
+      return 1;
     }
-
-    auto compressed_data = rle_compress(file_content);
-
-    write_file(COMPRESSED_OUTPUT, compressed_data);
-
-    auto compressed_read = read_binary_file(COMPRESSED_OUTPUT);
-    auto decompressed = rle_decompress(compressed_read);
-
-    save_text(DECOMPRESSED_OUTPUT, decompressed);
-
   } catch (const std::exception &e) {
     std::cerr << e.what() << std::endl;
     return 1;
