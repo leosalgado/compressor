@@ -78,13 +78,12 @@ void rle_decompress(std::vector<std::filesystem::path> &files) {
 
     std::vector<uint8_t> compressed_data((std::istreambuf_iterator<char>(ifs)),
                                          std::istreambuf_iterator<char>());
-
     size_t index = 1;
 
+    std::filesystem::path dir = file.parent_path() / file.stem();
+    std::filesystem::create_directories(dir);
+
     while (index < compressed_data.size()) {
-      if (index + 1 >= compressed_data.size()) {
-        break;
-      }
 
       uint8_t filename_length = compressed_data[index++];
 
@@ -92,7 +91,6 @@ void rle_decompress(std::vector<std::filesystem::path> &files) {
                            filename_length);
       index += filename_length;
 
-      std::filesystem::path path = file.parent_path() / filename;
       std::vector<uint8_t> output_data;
 
       while (index + 1 < compressed_data.size()) {
@@ -111,6 +109,8 @@ void rle_decompress(std::vector<std::filesystem::path> &files) {
 
         output_data.insert(output_data.end(), count, byte_value);
       }
+
+      std::filesystem::path path = dir / filename;
 
       write_bytes(path, output_data);
     }
