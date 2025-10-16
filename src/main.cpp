@@ -12,7 +12,7 @@ int main(int argc, char *argv[]) {
 
   std::vector<std::filesystem::path> inputFiles;
 
-  if (argc < 2) {
+  if (argc < 3) {
     std::cerr << "Usage: " << argv[0]
               << " compress|decompress <file1> <file2> ... <fileN>"
               << std::endl;
