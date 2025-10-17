@@ -1,7 +1,10 @@
 #pragma once
+#include "compressor.hpp"
 #include <filesystem>
 #include <vector>
 
-void rle_compress(std::vector<std::filesystem::path> &files);
-
-void rle_decompress(std::vector<std::filesystem::path> &files);
+class RLECompressor : public Compressor {
+public:
+  void compress(const std::vector<std::filesystem::path> &files) override;
+  void decompress(const std::vector<std::filesystem::path> &files) override;
+};

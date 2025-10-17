@@ -1,4 +1,5 @@
 #include "rle.hpp"
+#include "compression_type.hpp"
 #include "utils.hpp"
 
 #include <cstddef>
@@ -12,11 +13,11 @@
 #include <string>
 #include <vector>
 
-void rle_compress(std::vector<std::filesystem::path> &files) {
+void RLECompressor::compress(const std::vector<std::filesystem::path> &files) {
   std::vector<uint8_t> output;
 
   // Global header
-  uint8_t compression_type = 1;
+  uint8_t compression_type = static_cast<uint8_t>(CompressionType::RLE);
   output.push_back(compression_type);
 
   for (auto &file : files) {
@@ -71,11 +72,13 @@ void rle_compress(std::vector<std::filesystem::path> &files) {
                   compressed_block.end());
   }
 
-  files[0].replace_extension(".leo");
-  write_bytes(files[0], output);
+  auto compressed_output = files[0];
+  compressed_output.replace_extension(".leo");
+  write_bytes(compressed_output, output);
 }
 
-void rle_decompress(std::vector<std::filesystem::path> &files) {
+void RLECompressor::decompress(
+    const std::vector<std::filesystem::path> &files) {
   for (auto &file : files) {
     std::ifstream ifs(file, std::ios::binary);
 
