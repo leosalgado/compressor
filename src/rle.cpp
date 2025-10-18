@@ -1,5 +1,5 @@
 #include "rle.hpp"
-#include "compression_type.hpp"
+#include "compressor_factory.hpp"
 #include "utils.hpp"
 
 #include <cstddef>
@@ -7,17 +7,26 @@
 #include <cstdio>
 #include <filesystem>
 #include <fstream>
-#include <ios>
 #include <iostream>
 #include <iterator>
+#include <memory>
 #include <string>
 #include <vector>
+
+namespace {
+bool registered = []() {
+  CompressorFactory::register_compressor(RLECompressor::ID, "rle", []() {
+    return std::make_unique<RLECompressor>();
+  });
+  return true;
+}();
+} // namespace
 
 void RLECompressor::compress(const std::vector<std::filesystem::path> &files) {
   std::vector<uint8_t> output;
 
   // Global header
-  uint8_t compression_type = static_cast<uint8_t>(CompressionType::RLE);
+  uint8_t compression_type = static_cast<uint8_t>(RLECompressor::ID);
   output.push_back(compression_type);
 
   for (auto &file : files) {
@@ -89,15 +98,10 @@ void RLECompressor::decompress(
 
     std::vector<uint8_t> data((std::istreambuf_iterator<char>(ifs)),
                               std::istreambuf_iterator<char>());
-    size_t index = 0;
+    size_t index = 1;
 
     if (index >= data.size()) {
       std::cerr << "File is empty or invalid: " << file << std::endl;
-      continue;
-    }
-    uint8_t compression_type = data[index++];
-    if (compression_type != 1) {
-      std::cerr << "Unsupported compression type: " << file << std::endl;
       continue;
     }
 

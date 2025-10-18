@@ -1,10 +1,8 @@
-#include "compression_type.hpp"
 #include "compressor.hpp"
 #include "compressor_factory.hpp"
-#include "rle.hpp"
+#include "rle.cpp"
 
 #include <cstdint>
-#include <cstring>
 #include <exception>
 #include <filesystem>
 #include <fstream>
@@ -55,21 +53,18 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
-  uint8_t firstByte;
-  ifs.read(reinterpret_cast<char *>(&firstByte), 1);
-  ifs.close();
-
   std::unique_ptr<Compressor> compressor;
 
   if (mode == "compress") {
     std::string algorithm = argv[2];
-    CompressionType type = compression_type_from_string(algorithm);
-    compressor = CompressorFactory::create(type);
+    compressor = CompressorFactory::create_by_name(algorithm);
     compressor->compress(inputFiles);
   } else if (mode == "decompress") {
+    uint8_t firstByte;
+    ifs.read(reinterpret_cast<char *>(&firstByte), 1);
+    ifs.close();
     try {
-      CompressionType type = static_cast<CompressionType>(firstByte);
-      compressor = CompressorFactory::create(type);
+      compressor = CompressorFactory::create_by_id(firstByte);
       compressor->decompress(inputFiles);
     } catch (const std::exception &e) {
       std::cerr << e.what() << std::endl;
