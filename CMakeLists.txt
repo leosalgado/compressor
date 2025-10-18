@@ -4,8 +4,16 @@ project(compressor)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-add_library(rle STATIC src/rle.cpp)
-target_include_directories(rle PUBLIC ${CMAKE_SOURCE_DIR}/include)
+set(SRC_DIR ${CMAKE_SOURCE_DIR}/src)
+set(INCLUDE_DIR ${CMAKE_SOURCE_DIR}/include)
 
-add_executable(${PROJECT_NAME} src/main.cpp src/utils.cpp)
-target_link_libraries(${PROJECT_NAME} PUBLIC rle)
+include_directories(${INCLUDE_DIR})
+
+file(GLOB ALGORITHM_SOURCES "${SRC_DIR}/algorithms/*.cpp")
+
+add_executable(${PROJECT_NAME}
+  ${SRC_DIR}/main.cpp
+  ${SRC_DIR}/utils.cpp
+  ${ALGORITHM_SOURCES}
+)
+

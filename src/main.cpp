@@ -1,6 +1,5 @@
 #include "compressor.hpp"
 #include "compressor_factory.hpp"
-#include "rle.cpp"
 
 #include <cstdint>
 #include <exception>
