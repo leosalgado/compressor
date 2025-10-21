@@ -15,9 +15,9 @@
 
 namespace {
 bool registered = []() {
-  CompressorFactory::register_compressor(RLECompressor::ID, "rle", []() {
-    return std::make_unique<RLECompressor>();
-  });
+  CompressorFactory::register_compressor(
+      RLECompressor::ID, RLECompressor::NAME,
+      []() { return std::make_unique<RLECompressor>(); });
   return true;
 }();
 } // namespace
