@@ -1,0 +1,13 @@
+[build-system]
+requires = ["scikit-build-core", "pybind11>=2.10", "wheel"]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "compressor"
+version = "0.1.0"
+description = "A modular C++ compression library with Python bindings"
+authors = [{name = "leosalgado"}]
+requires-python = ">=3.11"
+
+[project.scripts]
+compressor = "compressor.cli:main"
