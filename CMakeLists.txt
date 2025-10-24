@@ -1,5 +1,5 @@
-cmake_minimum_required(VERSION 3.10)
-project(compressor)
+cmake_minimum_required(VERSION 3.15)
+project(shrinkr)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -9,7 +9,7 @@ set(SRC_DIR ${CMAKE_SOURCE_DIR}/src)
 set(ALGORITHMS_DIR ${CMAKE_SOURCE_DIR}/src/algorithms)
 set(INCLUDE_DIR ${CMAKE_SOURCE_DIR}/include)
 
-find_package(Python REQUIRED COMPONENTS Interpreter Development REQUIRED)
+find_package(Python COMPONENTS Interpreter Development.Module REQUIRED)
 find_package(pybind11 REQUIRED)
 
 include_directories(${INCLUDE_DIR})

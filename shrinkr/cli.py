@@ -1,4 +1,4 @@
-import compressor
+import shrinkr
 import sys
 
 
@@ -19,7 +19,7 @@ def main():
         algorithm = sys.argv[2]
         files = sys.argv[3:]
 
-        comp = compressor.CompressorFactory.create_by_name(algorithm)
+        comp = shrinkr.CompressorFactory.create_by_name(algorithm)
 
         comp.compress(files)
         print(f"Compressed {len(files)} file(s) using {algorithm}")
@@ -34,7 +34,7 @@ def main():
         with open(compressed_file, "rb") as f:
             first_byte = f.read(1)[0]
 
-        comp = compressor.CompressorFactory.create_by_id(first_byte)
+        comp = shrinkr.CompressorFactory.create_by_id(first_byte)
 
         comp.decompress([compressed_file])
         print(f"Decompressed {compressed_file}")
