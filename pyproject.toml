@@ -4,10 +4,15 @@ build-backend = "scikit_build_core.build"
 
 [project]
 name = "compressor"
-version = "0.1.0"
+version = "0.0.1"
 description = "A modular C++ compression library with Python bindings"
 authors = [{name = "leosalgado"}]
 requires-python = ">=3.11"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+license = "MIT"
 
 [project.scripts]
 compressor = "compressor.cli:main"
