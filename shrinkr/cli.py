@@ -4,15 +4,15 @@ import sys
 
 def main():
     if len(sys.argv) < 3:
-        print("Usage: python main.py compress <algorithm> <file1> [file2 ...]")
-        print("   or: python main.py decompress <compressed_file>")
+        print("Usage: shrinkr compress <algorithm> <file1> [file2 ...]")
+        print("   or: shrinkr decompress <compressed_file>")
         return 1
 
     mode = sys.argv[1]
 
     if mode == "compress":
         if len(sys.argv) < 4:
-            print("Usage: python main.py compress <algorithm> <file1> [file2 ...]")
+            print("Usage: shrinkr compress <algorithm> <file1> [file2 ...]")
             print('Available algorithms: "rle"')
             return 1
 
@@ -26,7 +26,7 @@ def main():
 
     elif mode == "decompress":
         if len(sys.argv) < 3:
-            print("Usage: python main.py decompress <compressed_file>")
+            print("Usage: shrinkr decompress <compressed_file>")
             return 1
 
         compressed_file = sys.argv[2]
