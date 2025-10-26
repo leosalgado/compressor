@@ -5,6 +5,10 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(MODULE_NAME "_core")
 
+if(APPLE)
+  set(CMAKE_OSX_DEPLOYMENT_TARGET "10.15" CACHE STRING "Minimum OS X deployment version")
+endif()
+
 set(SRC_DIR ${CMAKE_SOURCE_DIR}/src)
 set(ALGORITHMS_DIR ${CMAKE_SOURCE_DIR}/src/algorithms)
 set(INCLUDE_DIR ${CMAKE_SOURCE_DIR}/include)

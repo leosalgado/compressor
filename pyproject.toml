@@ -4,11 +4,13 @@ build-backend = "scikit_build_core.build"
 
 [project]
 name = "shrinkr"
-version = "0.0.1"
-description = "A modular C++ compression library with Python bindings"
+version = "0.0.2"
+description = "Fast C++ byte compression library for Python"
+readme = "README.md"
 authors = [{name = "leosalgado"}]
 requires-python = ">=3.11"
 classifiers = [
+    "Programming Language :: C++",
     "Programming Language :: Python :: 3",
     "Operating System :: OS Independent",
 ]
