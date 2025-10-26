@@ -32,6 +32,14 @@ public:
     return it->second();
   }
 
+  static std::vector<std::string> get_available_algorithms() {
+    std::vector<std::string> algorithms;
+    for (const auto &[name, _] : get_by_name()) {
+      algorithms.push_back(name);
+    }
+    return algorithms;
+  }
+
 private:
   static std::unordered_map<uint8_t, Creator> &get_by_id() {
     static std::unordered_map<uint8_t, Creator> by_id;

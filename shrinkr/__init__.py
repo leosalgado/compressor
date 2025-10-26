@@ -23,4 +23,8 @@ def decompress(files):
     comp.decompress(files)
 
 
-__all__ = ["compress", "decompress", "CompressorFactory", "Compressor"]
+def list_ctypes():
+    return CompressorFactory.get_available_algorithms()
+
+
+__all__ = ["compress", "decompress", "list_ctypes", "CompressorFactory", "Compressor"]

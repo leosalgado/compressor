@@ -13,7 +13,7 @@ def main():
     if mode == "compress":
         if len(sys.argv) < 4:
             print("Usage: shrinkr compress <algorithm> <file1> [file2 ...]")
-            print('Available algorithms: "rle"')
+            print(f"Available algorithms: {shrinkr.list_ctypes()}")
             return 1
 
         algorithm = sys.argv[2]

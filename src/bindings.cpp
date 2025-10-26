@@ -19,8 +19,11 @@ PYBIND11_MODULE(_core, m) {
                     return std::shared_ptr<Compressor>(
                         CompressorFactory::create_by_name(name).release());
                   })
-      .def_static("create_by_id", [](uint8_t id) {
-        return std::shared_ptr<Compressor>(
-            CompressorFactory::create_by_id(id).release());
-      });
+      .def_static("create_by_id",
+                  [](uint8_t id) {
+                    return std::shared_ptr<Compressor>(
+                        CompressorFactory::create_by_id(id).release());
+                  })
+      .def_static("get_available_algorithms",
+                  &CompressorFactory::get_available_algorithms);
 }
