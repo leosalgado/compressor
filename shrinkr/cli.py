@@ -1,4 +1,4 @@
-import shrinkr
+import shrinkr as sk
 import sys
 
 
@@ -13,13 +13,13 @@ def main():
     if mode == "compress":
         if len(sys.argv) < 4:
             print("Usage: shrinkr compress <algorithm> <file1> [file2 ...]")
-            print(f"Available algorithms: {shrinkr.list_ctypes()}")
+            print(f"Available algorithms: {sk.list_ctypes()}")
             return 1
 
         algorithm = sys.argv[2]
         files = sys.argv[3:]
 
-        comp = shrinkr.CompressorFactory.create_by_name(algorithm)
+        comp = sk.CompressorFactory.create_by_name(algorithm)
 
         comp.compress(files)
         print(f"Compressed {len(files)} file(s) using {algorithm}")
@@ -34,7 +34,7 @@ def main():
         with open(compressed_file, "rb") as f:
             first_byte = f.read(1)[0]
 
-        comp = shrinkr.CompressorFactory.create_by_id(first_byte)
+        comp = sk.CompressorFactory.create_by_id(first_byte)
 
         comp.decompress([compressed_file])
         print(f"Decompressed {compressed_file}")
