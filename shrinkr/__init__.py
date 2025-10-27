@@ -1,7 +1,7 @@
 from ._core import CompressorFactory, Compressor
 
 
-def compress(files, ctype=None):
+def compress(files: list[str], ctype: str | None = None) -> None:
     if not files:
         raise ValueError("No files provided")
 
@@ -12,7 +12,7 @@ def compress(files, ctype=None):
     comp.compress(files)
 
 
-def decompress(files):
+def decompress(files: list[str]) -> None:
     if not files:
         raise ValueError("No files provided")
 
@@ -23,7 +23,7 @@ def decompress(files):
     comp.decompress(files)
 
 
-def list_ctypes():
+def list_ctypes() -> list[str]:
     return CompressorFactory.get_available_algorithms()
 
 
