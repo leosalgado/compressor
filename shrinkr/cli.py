@@ -1,47 +1,41 @@
+import questionary
+import argparse
 import shrinkr as sk
 import sys
 
 
 def main():
-    if len(sys.argv) < 3:
-        print("Usage: shrinkr compress <algorithm> <file1> [file2 ...]")
-        print("   or: shrinkr decompress <compressed_file>")
-        return 1
 
-    mode = sys.argv[1]
+    parser = argparse.ArgumentParser()
+    parser.add_argument("mode", choices=["compress", "decompress"])
+    parser.add_argument("files", nargs="+")
+    args = parser.parse_args()
 
-    if mode == "compress":
-        if len(sys.argv) < 4:
-            print("Usage: shrinkr compress <algorithm> <file1> [file2 ...]")
-            print(f"Available algorithms: {sk.list_ctypes()}")
+    if args.mode == "compress":
+        algorithm = questionary.select(
+            "What compression algorithm do you wish to use?",
+            choices=sk.list_ctypes(),
+        ).ask()
+
+        if algorithm is None:
             return 1
-
-        algorithm = sys.argv[2]
-        files = sys.argv[3:]
 
         comp = sk.CompressorFactory.create_by_name(algorithm)
+        comp.compress(args.files)
+        print(f"Compressed {len(args.files)} file(s) using {algorithm}")
 
-        comp.compress(files)
-        print(f"Compressed {len(files)} file(s) using {algorithm}")
+    else:
+        if len(args.files) > 1:
+            print("\033[93mWarning:\033[0m only the first file will be decompressed")
 
-    elif mode == "decompress":
-        if len(sys.argv) < 3:
-            print("Usage: shrinkr decompress <compressed_file>")
-            return 1
-
-        compressed_file = sys.argv[2]
+        compressed_file = args.files[0]
 
         with open(compressed_file, "rb") as f:
             first_byte = f.read(1)[0]
 
         comp = sk.CompressorFactory.create_by_id(first_byte)
-
         comp.decompress([compressed_file])
         print(f"Decompressed {compressed_file}")
-
-    else:
-        print("Unknown mode: choose between compress|decompress")
-        return 1
 
     return 0
 
