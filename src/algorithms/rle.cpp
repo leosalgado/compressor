@@ -1,4 +1,5 @@
 #include "rle.hpp"
+
 #include "compressor_factory.hpp"
 #include "utils.hpp"
 
@@ -6,10 +7,9 @@
 #include <cstdint>
 #include <cstdio>
 #include <filesystem>
-#include <fstream>
 #include <iostream>
-#include <iterator>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -22,7 +22,19 @@ bool registered = []() {
 }();
 } // namespace
 
+struct DecodedFile {
+  std::string name;
+  std::vector<uint8_t> data;
+};
+
+std::vector<uint8_t> rle_encode(const std::vector<uint8_t> &bytes);
+std::vector<DecodedFile> rle_decode(const std::vector<uint8_t> &bytes);
+
 void RLECompressor::compress(const std::vector<std::filesystem::path> &files) {
+  if (files.empty()) {
+    throw std::runtime_error("No files provided");
+  }
+
   std::vector<uint8_t> output;
 
   // Global header
@@ -32,51 +44,28 @@ void RLECompressor::compress(const std::vector<std::filesystem::path> &files) {
   for (auto &file : files) {
     auto bytes = read_bytes(file);
 
-    if (bytes.empty()) {
-      std::cerr << "File " << file << " is empty and couldn't be read."
-                << std::endl;
-      continue;
-    }
+    auto compressed_block = rle_encode(bytes);
 
-    std::vector<uint8_t> compressed_block;
-    uint8_t current = bytes[0];
-    uint32_t count = 1;
-
-    for (size_t i = 1; i < bytes.size(); i++) {
-      if (bytes[i] == current) {
-        count++;
-      } else {
-        compressed_block.push_back(current);
-        compressed_block.push_back(count & 0xFF);
-        compressed_block.push_back((count >> 8) & 0xFF);
-        compressed_block.push_back((count >> 16) & 0xFF);
-        compressed_block.push_back((count >> 24) & 0xFF);
-        current = bytes[i];
-        count = 1;
-      }
-    }
-
-    compressed_block.push_back(current);
-    compressed_block.push_back(count & 0xFF);
-    compressed_block.push_back((count >> 8) & 0xFF);
-    compressed_block.push_back((count >> 16) & 0xFF);
-    compressed_block.push_back((count >> 24) & 0xFF);
-
-    uint32_t block_size = compressed_block.size();
+    uint32_t block_length = compressed_block.size();
 
     // File header
     std::string filename_string = file.filename().string();
+    if (filename_string.size() > 255) {
+      throw std::runtime_error("Filename too long (max 255 characters): " +
+                               filename_string);
+    }
     output.push_back(static_cast<uint8_t>(filename_string.size()));
     for (auto &character : filename_string) {
       output.push_back(static_cast<uint8_t>(character));
     }
 
-    output.push_back(block_size & 0xFF);
-    output.push_back((block_size >> 8) & 0xFF);
-    output.push_back((block_size >> 16) & 0xFF);
-    output.push_back((block_size >> 24) & 0xFF);
+    // Compressed bytes size
+    output.push_back(block_length & 0xFF);
+    output.push_back((block_length >> 8) & 0xFF);
+    output.push_back((block_length >> 16) & 0xFF);
+    output.push_back((block_length >> 24) & 0xFF);
 
-    // Compressed data
+    // Compressed bytes
     output.insert(output.end(), compressed_block.begin(),
                   compressed_block.end());
   }
@@ -89,68 +78,134 @@ void RLECompressor::compress(const std::vector<std::filesystem::path> &files) {
 void RLECompressor::decompress(
     const std::vector<std::filesystem::path> &files) {
   for (auto &file : files) {
-    std::ifstream ifs(file, std::ios::binary);
+    auto bytes = read_bytes(file);
 
-    if (!ifs) {
-      std::cerr << "Unable to open the file: " << file << std::endl;
-      continue;
+    if (bytes.empty()) {
+      std::cerr << "File " << file << " is empty and couldn't be read."
+                << std::endl;
+      break;
     }
 
-    std::vector<uint8_t> data((std::istreambuf_iterator<char>(ifs)),
-                              std::istreambuf_iterator<char>());
-    size_t index = 1;
-
-    if (index >= data.size()) {
-      std::cerr << "File is empty or invalid: " << file << std::endl;
-      continue;
-    }
+    auto decompressed_file = rle_decode(bytes);
 
     std::filesystem::path dir = file.parent_path() / file.stem();
     std::filesystem::create_directories(dir);
 
-    while (index < data.size()) {
-      if (index >= data.size())
-        break;
-
-      uint8_t filename_length = data[index++];
-      if (index + filename_length > data.size())
-        break;
-
-      std::string filename(reinterpret_cast<char *>(&data[index]),
-                           filename_length);
-      index += filename_length;
-
-      if (index + 4 > data.size())
-        break;
-
-      uint32_t block_size = (data[index]) | (data[index + 1] << 8) |
-                            (data[index + 2] << 16) | (data[index + 3] << 24);
-      index += 4;
-
-      if (index + block_size > data.size())
-        break;
-
-      std::vector<uint8_t> compressed_block(data.begin() + index,
-                                            data.begin() + index + block_size);
-
-      index += block_size;
-
-      std::vector<uint8_t> output;
-      size_t i = 0;
-      // value -> 1 byte + count -> 4 bytes = 5 bytes
-      while (i + 5 <= compressed_block.size()) {
-        uint8_t value = compressed_block[i++];
-        uint32_t count = 0;
-        count |= compressed_block[i++];
-        count |= (compressed_block[i++] << 8);
-        count |= (compressed_block[i++] << 16);
-        count |= (compressed_block[i++] << 24);
-
-        output.insert(output.end(), count, value);
-      }
-
-      std::filesystem::path path = dir / filename;
-      write_bytes(path, output);
+    for (auto &df : decompressed_file) {
+      std::filesystem::path path = dir / df.name;
+      write_bytes(path, df.data);
     }
   }
+}
+
+std::vector<uint8_t> rle_encode(const std::vector<uint8_t> &bytes) {
+  std::vector<uint8_t> compressed_block;
+  size_t i = 0;
+  // 0 to 127 == literal
+  // 129 to 255 == run_length
+  while (i < bytes.size()) {
+    size_t run_length = 1;
+    while (i + run_length < bytes.size() && bytes[i + run_length] == bytes[i] &&
+           run_length < 128) {
+      run_length++;
+    }
+
+    if (run_length > 1) {
+      // Run
+      compressed_block.push_back(127 + run_length);
+      compressed_block.push_back(bytes[i]);
+      i += run_length;
+    } else {
+      // Literal
+      std::vector<uint8_t> literal;
+      literal.push_back(bytes[i]);
+      i++;
+
+      while (i < bytes.size()) {
+        if (i + 1 < bytes.size() && bytes[i] == bytes[i + 1]) {
+          break;
+        }
+        literal.push_back(bytes[i]);
+        i++;
+        if (literal.size() == 128) {
+          break;
+        }
+      }
+      compressed_block.push_back(literal.size() - 1);
+      compressed_block.insert(compressed_block.end(), literal.begin(),
+                              literal.end());
+    }
+  }
+  return compressed_block;
+}
+
+std::vector<DecodedFile> rle_decode(const std::vector<uint8_t> &bytes) {
+  std::vector<DecodedFile> output;
+  size_t byte_index = 1;
+
+  while (byte_index < bytes.size()) {
+    // Name
+    uint8_t filename_length = bytes[byte_index++];
+    if (byte_index + filename_length > bytes.size()) {
+      throw std::runtime_error(
+          "Corrupted file: filename extends beyond file end");
+    }
+    std::string filename(reinterpret_cast<const char *>(&bytes[byte_index]),
+                         filename_length);
+    byte_index += filename_length;
+
+    // Length
+    if (byte_index + 4 > bytes.size()) {
+      throw std::runtime_error(
+          "Corrupted file: unexpected end while reading block length");
+    }
+    uint32_t block_length = (bytes[byte_index]) | (bytes[byte_index + 1] << 8) |
+                            (bytes[byte_index + 2] << 16) |
+                            (bytes[byte_index + 3] << 24);
+
+    byte_index += 4;
+
+    // Copy
+    if (byte_index + block_length > bytes.size()) {
+      throw std::runtime_error(
+          "Corrupted file: compressed block extends beyond file end");
+    }
+    std::vector<uint8_t> compressed_block(
+        bytes.begin() + byte_index, bytes.begin() + byte_index + block_length);
+    byte_index += block_length;
+
+    // Decode
+    DecodedFile file;
+    file.name = filename;
+    file.data.reserve(block_length * 2);
+
+    size_t i = 0;
+    while (i < compressed_block.size()) {
+      uint8_t header = compressed_block[i++];
+      if (header < 128) {
+        // Literal
+        uint8_t literal_length = header + 1;
+        if (i + literal_length > compressed_block.size()) {
+          throw std::runtime_error(
+              "Corrupted file: literal run extends beyond block end");
+        }
+
+        file.data.insert(file.data.end(), compressed_block.begin() + i,
+                         compressed_block.begin() + i + literal_length);
+        i += literal_length;
+      } else {
+        // Run
+        if (i >= compressed_block.size()) {
+          throw std::runtime_error(
+              "Corrupted file: unexpected end while reading run value");
+        }
+
+        uint8_t count = header - 127;
+        uint8_t value = compressed_block[i++];
+        file.data.insert(file.data.end(), count, value);
+      }
+    }
+    output.push_back(std::move(file));
+  }
+  return output;
 }
