@@ -15,12 +15,14 @@ std::vector<uint8_t> read_bytes(const std::filesystem::path &path) {
     throw std::runtime_error("Error opening file: " + path.string());
   }
 
-  std::vector<uint8_t> data;
+  auto size = std::filesystem::file_size(path);
+  std::vector<uint8_t> data(size);
 
-  uint8_t value;
+  in.read(reinterpret_cast<char *>(data.data()), size);
 
-  while (in.read(reinterpret_cast<char *>(&value), sizeof(uint8_t))) {
-    data.push_back(value);
+  if (in.gcount() != size) {
+    throw std::runtime_error("Error: Couldn't read all bytes from: " +
+                             path.string());
   }
 
   return data;
